@@ -40,9 +40,12 @@ public class UserDetailsService {
         return userDetailsRepository.findUserDetailsByNameOrPhone(name, phone);
     } 
 
-    public List<UserDetails> getUsersLike(String name) {
+    public List<UserDetails> getUsersLike(
+        // String name
+    ) {
         Pageable pageable = PageRequest.of(0, 5, Sort.by("name").descending());
-        return userDetailsRepository.findUserDetailsByNameContaining(name, pageable);
+        // return userDetailsRepository.findUserDetailsByNameContaining(name , pageable);
+        return userDetailsRepository.findUserDetailsWithAddress();
     } 
 
     @Transactional
