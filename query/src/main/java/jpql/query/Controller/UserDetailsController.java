@@ -50,10 +50,10 @@ public class UserDetailsController {
 
     @GetMapping("/like")
     public ResponseEntity<List<UserDetails>> getUsersLike(
-        // @RequestParam(required = false) String name
+        @RequestParam(required = false) String name
     ) {
-        // List<UserDetails> response = userDetailsService.getUsersLike(name);
-        List<UserDetails> response = userDetailsService.getUsersLike();
+        List<UserDetails> response = userDetailsService.getUsersLike(name);
+        // List<UserDetails> response = userDetailsService.getUsersLike();
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

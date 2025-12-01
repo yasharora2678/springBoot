@@ -41,11 +41,11 @@ public class UserDetailsService {
     } 
 
     public List<UserDetails> getUsersLike(
-        // String name
+        String name
     ) {
         Pageable pageable = PageRequest.of(0, 5, Sort.by("name").descending());
-        // return userDetailsRepository.findUserDetailsByNameContaining(name , pageable);
-        return userDetailsRepository.findUserDetailsWithAddress();
+        return userDetailsRepository.findUserDetailsByNameContaining(name , pageable);
+        // return userDetailsRepository.findUserDetailsWithAddress();
     } 
 
     @Transactional
