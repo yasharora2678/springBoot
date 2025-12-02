@@ -34,4 +34,10 @@ public class UserDetailsController {
         List<UserDTO> response = userDetailsService.getSpecificUserDetailsByPhoneCriteriaAPI(name);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @GetMapping("/specification")
+    public ResponseEntity<List<UserDetails>> getUsersUsingSpecificationApi(@RequestParam(required = false) String name) {
+        List<UserDetails> response = userDetailsService.getSpecificUserDetailsByPhoneUsingSpecificationAPI(name);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }
