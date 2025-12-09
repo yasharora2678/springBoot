@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>XSS Demo</title>
+</head>
+<body>
+<h2>Leave a Comment</h2>
+
+<form method="POST" action="/comments">
+    <input type="text" name="comment" placeholder="Enter comment" />
+    <button type="submit">Submit</button>
+</form>
+
+<h3>All Comments:</h3>
+
+<ul>
+    <li th:each="c : ${comments}" th:utext="${c}"></li>
+</ul>
+
+</body>
+</html>

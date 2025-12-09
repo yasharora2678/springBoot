@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home Page</title>
+</head>
+<body>
+
+<h2>Welcome, You are logged in!</h2>
+
+<h3>Transfer Money</h3>
+<form method="post" action="/transfer-money">
+    <input type="text" name="amount" placeholder="Amount"/><br/>
+    <input type="text" name="to" placeholder="Send To"/><br/>
+
+    <input type="hidden" name="_csrf" value="${_csrf.token}"/>
+    <button type="submit">Send</button>
+</form>
+
+<p style="color:green">${message}</p>
+
+</body>
+</html>

