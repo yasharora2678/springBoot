@@ -13,6 +13,7 @@ import authentication.jwt.Utils.JWTUtil;
 import authentication.jwt.Utils.LoginRequest;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -44,6 +45,16 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         if (authResult.isAuthenticated()) {
             String token = jwtUtil.generateToken(authResult.getName(), 15);
             response.setHeader("Authorization", "Bearer " + token);
+
+            //refresh token which will be long lived
+            String refreshToken = jwtUtil.generateToken(authResult.getName(), 7 * 24 * 60);
+            // set refreshtoken in http only cookie so that user not want to store that in localstorage
+            Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+            refreshCookie.setHttpOnly(true); // prevent javascript from accessing it
+            refreshCookie.setSecure(true); // sent only over https
+            refreshCookie.setPath("refresh-token");
+            refreshCookie.setMaxAge(7 * 24 * 60 * 60);
+            response.addCookie(refreshCookie);
         }
     }
 }
