@@ -27,13 +27,13 @@ public class JWTValidationFilter extends OncePerRequestFilter {
         String token = extractJwtFromRequest(request);
 
         if (token != null) {
-        JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(token);
+            JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(token);
 
-        Authentication authResult = authenticationManager.authenticate(authenticationToken);
+            Authentication authResult = authenticationManager.authenticate(authenticationToken);
 
-        if (authResult.isAuthenticated()) {
-            SecurityContextHolder.getContext().setAuthentication(authResult);
-        }
+            if (authResult.isAuthenticated()) {
+                SecurityContextHolder.getContext().setAuthentication(authResult);
+            }
         }
         filterChain.doFilter(request, response);
         return;
@@ -41,7 +41,7 @@ public class JWTValidationFilter extends OncePerRequestFilter {
 
     private String extractJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        if(bearerToken != null && bearerToken.startsWith("Bearer ")) {
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
         return null;
