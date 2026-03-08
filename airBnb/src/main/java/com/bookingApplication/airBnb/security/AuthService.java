@@ -1,8 +1,7 @@
-package com.bookingApplication.airBnb.service;
+package com.bookingApplication.airBnb.security;
 
 import com.bookingApplication.airBnb.dto.LoginRequest;
 import com.bookingApplication.airBnb.dto.SignUpRequest;
-import com.bookingApplication.airBnb.dto.TokenResponse;
 import com.bookingApplication.airBnb.entity.UserEntity;
 import com.bookingApplication.airBnb.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,16 +33,17 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public TokenResponse login(LoginRequest loginDto) {
+    public String[] login(LoginRequest loginDto) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 loginDto.getEmail(), loginDto.getPassword()
         ));
 
         UserDetails user = (UserDetails) authentication.getPrincipal();
 
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        String[] arr = new String[2];
+        arr[0] = jwtService.generateAccessToken(user);
+        arr[1] = jwtService.generateRefreshToken(user);
 
-        return new TokenResponse(accessToken, refreshToken);
+        return arr;
     }
 }

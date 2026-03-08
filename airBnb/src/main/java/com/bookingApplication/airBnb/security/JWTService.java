@@ -1,4 +1,4 @@
-package com.bookingApplication.airBnb.service;
+package com.bookingApplication.airBnb.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -28,7 +28,6 @@ public class JWTService {
     }
 
     private String generateToken(UserDetails user, long expiry) {
-
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date())

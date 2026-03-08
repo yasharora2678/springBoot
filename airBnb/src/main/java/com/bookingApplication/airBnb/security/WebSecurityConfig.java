@@ -1,7 +1,8 @@
-package com.bookingApplication.airBnb.config;
+package com.bookingApplication.airBnb.security;
 
-import com.bookingApplication.airBnb.filters.JWTAuthFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,7 +13,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 
 @Configuration
@@ -21,6 +24,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig {
     private final JWTAuthFilter jwtAuthenticationFilter;
 
+    @Qualifier("handlerExceptionResolver")
+    private final HandlerExceptionResolver handlerExceptionResolver;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -28,8 +34,10 @@ public class WebSecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .anyRequest().authenticated());
+                        .requestMatchers("/users/**").authenticated()
+                        .anyRequest().permitAll()
+                )
+                .exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler()));
 
         return http.build();
     }
@@ -44,5 +52,12 @@ public class WebSecurityConfig {
             AuthenticationConfiguration config) throws Exception {
 
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            handlerExceptionResolver.resolveException(request, response, null, accessDeniedException);
+        };
     }
 }
