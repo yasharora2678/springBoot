@@ -1,6 +1,7 @@
 package com.bookingApplication.airBnb.security;
 
-import com.bookingApplication.airBnb.service.CustomUserDetailsService;
+import com.bookingApplication.airBnb.entity.UserEntity;
+import com.bookingApplication.airBnb.repository.UserRepository;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -22,7 +22,7 @@ import java.io.IOException;
 public class JWTAuthFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
-    private final CustomUserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     @Qualifier("handlerExceptionResolver")
     private final HandlerExceptionResolver handlerExceptionResolver;
@@ -41,11 +41,11 @@ public class JWTAuthFilter extends OncePerRequestFilter {
 
             String token = header.substring(7);
 
-            String email = jwtService.extractUsername(token);
+            Long userId = jwtService.extractUserId(token);
 
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                UserDetails user = userDetailsService.loadUserByUsername(email);
+                UserEntity user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User Id not found"));
 
                 if (jwtService.isTokenValid(token, user)) {
 

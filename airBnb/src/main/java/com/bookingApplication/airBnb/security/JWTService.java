@@ -1,5 +1,6 @@
 package com.bookingApplication.airBnb.security;
 
+import com.bookingApplication.airBnb.entity.UserEntity;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -19,17 +20,17 @@ public class JWTService {
     @Value("${jwt.secret}")
     private String secret;
 
-    public String generateAccessToken(UserDetails user) {
+    public String generateAccessToken(UserEntity user) {
         return generateToken(user, 1000 * 60 * 15);
     }
 
-    public String generateRefreshToken(UserDetails user) {
+    public String generateRefreshToken(UserEntity user) {
         return generateToken(user, 1000L * 60 * 60 * 24 * 7);
     }
 
-    private String generateToken(UserDetails user, long expiry) {
+    private String generateToken(UserEntity user, long expiry) {
         return Jwts.builder()
-                .setSubject(user.getUsername())
+                .setSubject(String.valueOf(user.getId()))
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiry))
                 .signWith(getKey(), SignatureAlgorithm.HS256)
@@ -41,8 +42,8 @@ public class JWTService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+    public Long extractUserId(String token) {
+        return Long.parseLong(extractClaim(token, Claims::getSubject));
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> resolver) {
@@ -68,11 +69,10 @@ public class JWTService {
         return extractExpiration(token).before(new Date());
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
+    public boolean isTokenValid(String token, UserEntity user) {
 
-        final String username = extractUsername(token);
-
-        return username.equals(userDetails.getUsername())
+        final Long userId = extractUserId(token);
+        return userId.equals(user.getId())
                 && !isTokenExpired(token);
     }
 }
