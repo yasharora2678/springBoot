@@ -1,9 +1,9 @@
 package com.bookingApplication.airBnb.controller;
 
 import com.bookingApplication.airBnb.dto.LoginRequest;
-import com.bookingApplication.airBnb.dto.LoginResponseDto;
+import com.bookingApplication.airBnb.interfaces.LoginResponse;
 import com.bookingApplication.airBnb.dto.SignUpRequest;
-import com.bookingApplication.airBnb.dto.SignUpResponseDTO;
+import com.bookingApplication.airBnb.interfaces.SignUpResponse;
 import com.bookingApplication.airBnb.security.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,24 +26,24 @@ public class AuthController {
     private final  AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<SignUpResponseDTO> signUp(@RequestBody SignUpRequest body) {
-        SignUpResponseDTO responseDTO = authService.signUp(body);
+    public ResponseEntity<SignUpResponse> signUp(@RequestBody SignUpRequest body) {
+        SignUpResponse responseDTO = authService.signUp(body);
         return ResponseEntity.ok(responseDTO);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequest request, HttpServletResponse httpServletResponse) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request, HttpServletResponse httpServletResponse) {
         String[] tokens = authService.login(request);
 
         Cookie cookie = new Cookie("refreshToken", tokens[1]);
         cookie.setHttpOnly(true);
 
         httpServletResponse.addCookie(cookie);
-        return ResponseEntity.ok(new LoginResponseDto(tokens[0]));
+        return ResponseEntity.ok(new LoginResponse(tokens[0]));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponseDto> refreshToken(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<LoginResponse> refreshToken(HttpServletRequest httpServletRequest) {
         String refreshToken = Arrays.stream(httpServletRequest.getCookies())
                 .filter(cookie -> "refreshToken".equals(cookie.getName()))
                 .findFirst()
@@ -51,6 +51,6 @@ public class AuthController {
                 .orElseThrow(() -> new AuthenticationServiceException("Refresh Token not found in cookies"));
 
         String accessToken = authService.refreshToken(refreshToken);
-        return ResponseEntity.ok(new LoginResponseDto(accessToken));
+        return ResponseEntity.ok(new LoginResponse(accessToken));
     }
 }

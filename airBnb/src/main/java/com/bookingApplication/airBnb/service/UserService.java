@@ -1,6 +1,6 @@
 package com.bookingApplication.airBnb.service;
 
-import com.bookingApplication.airBnb.dto.SignUpResponseDTO;
+import com.bookingApplication.airBnb.interfaces.SignUpResponse;
 import com.bookingApplication.airBnb.entity.UserEntity;
 import com.bookingApplication.airBnb.enums.Role;
 import com.bookingApplication.airBnb.exceptions.UnAuthorisedException;
@@ -16,7 +16,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
 
-    public SignUpResponseDTO getUserById(Long id) {
+    public SignUpResponse getUserById(Long id) {
         UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if(!user.getRoles().contains(Role.HOTEL_MANAGER)){
             throw new UnAuthorisedException("Only admins can view the users details");
@@ -25,6 +25,6 @@ public class UserService {
         user =  userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return modelMapper.map(user, SignUpResponseDTO.class);
+        return modelMapper.map(user, SignUpResponse.class);
     }
 }

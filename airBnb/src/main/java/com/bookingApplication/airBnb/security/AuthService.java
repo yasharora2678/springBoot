@@ -2,7 +2,7 @@ package com.bookingApplication.airBnb.security;
 
 import com.bookingApplication.airBnb.dto.LoginRequest;
 import com.bookingApplication.airBnb.dto.SignUpRequest;
-import com.bookingApplication.airBnb.dto.SignUpResponseDTO;
+import com.bookingApplication.airBnb.interfaces.SignUpResponse;
 import com.bookingApplication.airBnb.enums.Role;
 import com.bookingApplication.airBnb.entity.UserEntity;
 import com.bookingApplication.airBnb.repository.UserRepository;
@@ -27,7 +27,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final ModelMapper modelMapper;
 
-    public SignUpResponseDTO signUp(SignUpRequest signUpRequest) {
+    public SignUpResponse signUp(SignUpRequest signUpRequest) {
         UserEntity user = UserEntity.builder()
                 .name(signUpRequest.getName())
                 .email(signUpRequest.getEmail())
@@ -39,7 +39,7 @@ public class AuthService {
                 .build();
 
         user = userRepository.save(user);
-        return modelMapper.map(user, SignUpResponseDTO.class);
+        return modelMapper.map(user, SignUpResponse.class);
     }
 
     public String[] login(LoginRequest loginDto) {

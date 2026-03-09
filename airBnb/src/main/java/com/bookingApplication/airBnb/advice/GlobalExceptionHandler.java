@@ -1,5 +1,6 @@
 package com.bookingApplication.airBnb.advice;
 
+import com.bookingApplication.airBnb.exceptions.ResourceNotFoundException;
 import com.bookingApplication.airBnb.exceptions.UnAuthorisedException;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
@@ -52,6 +53,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleUnAuthorisedException(UnAuthorisedException ex) {
         ApiError apiError = ApiError.builder()
                 .status(HttpStatus.UNAUTHORIZED)
+                .message(ex.getMessage())
+                .build();
+        return buildErrorResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        ApiError apiError = ApiError.builder()
+                .status(HttpStatus.NOT_FOUND)
                 .message(ex.getMessage())
                 .build();
         return buildErrorResponseEntity(apiError);

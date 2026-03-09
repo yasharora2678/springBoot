@@ -1,4 +1,4 @@
-package com.bookingApplication.airBnb.dto;
+package com.bookingApplication.airBnb.interfaces;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginResponseDto {
+public class LoginResponse {
     private String accessToken;
 }
