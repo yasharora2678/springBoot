@@ -3,14 +3,13 @@ package com.bookingApplication.airBnb.controller;
 import com.bookingApplication.airBnb.dto.LoginRequest;
 import com.bookingApplication.airBnb.dto.LoginResponseDto;
 import com.bookingApplication.airBnb.dto.SignUpRequest;
+import com.bookingApplication.airBnb.dto.SignUpResponseDTO;
 import com.bookingApplication.airBnb.security.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,12 +24,11 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class AuthController {
     private final  AuthService authService;
-    private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
-    public ResponseEntity<String> signUp(@RequestBody SignUpRequest body) {
-        authService.signUp(body);
-        return ResponseEntity.ok("success");
+    public ResponseEntity<SignUpResponseDTO> signUp(@RequestBody SignUpRequest body) {
+        SignUpResponseDTO responseDTO = authService.signUp(body);
+        return ResponseEntity.ok(responseDTO);
     }
 
     @PostMapping("/login")

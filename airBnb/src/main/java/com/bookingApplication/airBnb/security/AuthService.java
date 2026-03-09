@@ -2,18 +2,19 @@ package com.bookingApplication.airBnb.security;
 
 import com.bookingApplication.airBnb.dto.LoginRequest;
 import com.bookingApplication.airBnb.dto.SignUpRequest;
-import com.bookingApplication.airBnb.entity.Role;
+import com.bookingApplication.airBnb.dto.SignUpResponseDTO;
+import com.bookingApplication.airBnb.enums.Role;
 import com.bookingApplication.airBnb.entity.UserEntity;
 import com.bookingApplication.airBnb.repository.UserRepository;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 
@@ -24,17 +25,21 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final ModelMapper modelMapper;
 
-    public void signUp(SignUpRequest signUpRequest) {
+    public SignUpResponseDTO signUp(SignUpRequest signUpRequest) {
         UserEntity user = UserEntity.builder()
                 .name(signUpRequest.getName())
                 .email(signUpRequest.getEmail())
                 .password(passwordEncoder.encode(signUpRequest.getPassword()))
                 .roles(Set.of(Role.GUEST))
+                .gender(signUpRequest.getGender())
+                .dateOfBirth(LocalDate.parse(signUpRequest.getDateOfBirth()))
                 .provider("LOCAL")
                 .build();
 
-        userRepository.save(user);
+        user = userRepository.save(user);
+        return modelMapper.map(user, SignUpResponseDTO.class);
     }
 
     public String[] login(LoginRequest loginDto) {
