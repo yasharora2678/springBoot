@@ -32,7 +32,7 @@ public class AuthService {
                 .name(signUpRequest.getName())
                 .email(signUpRequest.getEmail())
                 .password(passwordEncoder.encode(signUpRequest.getPassword()))
-                .roles(Set.of(Role.GUEST))
+                .roles(Set.of(signUpRequest.getRole()))
                 .gender(signUpRequest.getGender())
                 .dateOfBirth(LocalDate.parse(signUpRequest.getDateOfBirth()))
                 .provider("LOCAL")

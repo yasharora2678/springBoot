@@ -1,5 +1,6 @@
 package com.bookingApplication.airBnb.security;
 
+import com.bookingApplication.airBnb.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,6 +36,7 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/**").authenticated()
+                        .requestMatchers("/admin/**").hasRole("HOTEL_MANAGER")
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler()));

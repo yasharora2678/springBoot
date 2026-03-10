@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class HotelRequest {
-    private Long id;
+//    private Long id;
     private String name;
     private String city;
     private String[] photos;

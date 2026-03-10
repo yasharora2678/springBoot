@@ -46,8 +46,9 @@ public class HotelServiceImpl implements HotelService {
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel with ID: " + id + " not found"));
 
         UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!user.equals(hotel.getOwner())) {
-            throw new UnAuthorisedException("This user does not own this hotel with id: " + id);
+        if (!user.getId().equals(hotel.getOwner().getId())) {
+            throw new UnAuthorisedException(
+                    "This user does not own this hotel with id: " + id);
         }
 
         return modelMapper.map(hotel, HotelRequest.class);
@@ -64,7 +65,7 @@ public class HotelServiceImpl implements HotelService {
 
         UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        if (!user.equals(hotel.getOwner())) {
+        if (!user.getId().equals(hotel.getOwner().getId())) {
             throw new UnAuthorisedException("This user does not own this hotel with id: " + id);
         }
 
@@ -91,7 +92,7 @@ public class HotelServiceImpl implements HotelService {
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel with ID: " + id + " not found"));
 
         UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!user.equals(hotel.getOwner())) {
+        if (!user.getId().equals(hotel.getOwner().getId())) {
             throw new UnAuthorisedException("This user does not own this hotel with id: " + id);
         }
 
@@ -107,12 +108,12 @@ public class HotelServiceImpl implements HotelService {
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel with ID: " + hotelId + " not found"));
 
         UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!user.equals(hotel.getOwner())) {
+        if (!user.getId().equals(hotel.getOwner().getId())) {
             throw new UnAuthorisedException("This user does not own this hotel with id: " + hotelId);
         }
 
         hotel.setActive(true);
-        hotel = hotelRepository.save(hotel);
+        hotelRepository.save(hotel);
     }
 
     @Override

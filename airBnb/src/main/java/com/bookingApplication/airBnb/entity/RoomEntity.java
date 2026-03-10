@@ -1,30 +1,34 @@
 package com.bookingApplication.airBnb.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
-@Table(name = "hotel")
+@Table(name = "rooms")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class HotelEntity {
+public class RoomEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotel_id",nullable = false)
+    private HotelEntity hotel;
 
-    private String city;
+    @Column(nullable = false)
+    private String type;
+
+    @Column(nullable = false,precision = 10,scale = 2)
+    private BigDecimal basePrice;
 
     @Column(columnDefinition = "TEXT[]")
     private String[] photos;
@@ -32,23 +36,16 @@ public class HotelEntity {
     @Column(columnDefinition = "TEXT[]")
     private String[] amenities;
 
-    @Embedded
-    private HotelContactInfo hotelContactInfo;
+    @Column(nullable = false)
+    private Integer totalCount;
 
     @Column(nullable = false)
-    private Boolean active;
-
-    @ManyToOne(optional = false)
-    private UserEntity owner;
-
-    @OneToMany(mappedBy = "hotel",fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<RoomEntity> rooms;
+    private Integer capacity;
 
     @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
 }
