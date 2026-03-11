@@ -11,6 +11,7 @@ import com.bookingApplication.airBnb.repository.RoomRepository;
 import com.bookingApplication.airBnb.service.interfaces.InventoryService;
 import com.bookingApplication.airBnb.service.interfaces.RoomService;
 import com.bookingApplication.airBnb.utils.AppUtils;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -67,7 +68,7 @@ public class RoomServiceImpl implements RoomService {
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with ID: " + hotelId));
 
         UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!user.equals(hotel.getOwner())) {
+        if (!user.getId().equals(hotel.getOwner().getId())) {
             throw new UnAuthorisedException("This user does not own this hotel with id: " + hotelId);
         }
 
@@ -88,6 +89,7 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    @Transactional
     public void deleteRoomById(Long roomId) {
         log.info("Deleting the room with ID: {}", roomId);
         RoomEntity room = roomRepository
@@ -95,7 +97,7 @@ public class RoomServiceImpl implements RoomService {
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found with ID: " + roomId));
 
         UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!user.equals(room.getHotel().getOwner())) {
+        if (!user.getId().equals(room.getHotel().getOwner().getId())) {
             throw new UnAuthorisedException("This user does not own this room with id: " + roomId);
         }
         inventoryService.deleteAllInventories(room);
@@ -110,7 +112,7 @@ public class RoomServiceImpl implements RoomService {
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with ID: "+hotelId));
 
         UserEntity user = AppUtils.getCurrentUser();
-        if(!user.equals(hotel.getOwner())) {
+        if(!user.getId().equals(hotel.getOwner().getId())) {
             throw new UnAuthorisedException("This user does not own this hotel with id: "+hotelId);
         }
 

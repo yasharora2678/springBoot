@@ -1,6 +1,8 @@
 package com.bookingApplication.airBnb.service;
 
+import com.bookingApplication.airBnb.dto.RoomRequest;
 import com.bookingApplication.airBnb.entity.HotelEntity;
+import com.bookingApplication.airBnb.entity.RoomEntity;
 import com.bookingApplication.airBnb.entity.UserEntity;
 import com.bookingApplication.airBnb.exceptions.ResourceNotFoundException;
 import com.bookingApplication.airBnb.exceptions.UnAuthorisedException;
@@ -123,8 +125,12 @@ public class HotelServiceImpl implements HotelService {
         HotelEntity hotel = hotelRepository
                 .findById(hotelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel with ID: " + hotelId + " not found"));
+        List<RoomRequest> rooms = hotel.getRooms()
+                .stream()
+                .map((element) -> modelMapper.map(element, RoomRequest.class))
+                .toList();
 
-        return modelMapper.map(hotel, HotelInfoResponse.class);
+        return new HotelInfoResponse(modelMapper.map(hotel, HotelRequest.class), rooms);
     }
 
     @Override

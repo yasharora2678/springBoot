@@ -13,7 +13,13 @@ import java.util.List;
 @Slf4j
 public class PricingService {
     public BigDecimal calculateDynamicPricing(InventoryEntity inventoryEntity) {
-        return BigDecimal.ZERO;
+        PricingStrategy basePricingStrategy = new BasePricingStrategy();
+        basePricingStrategy = new SurgePricingStrategy(basePricingStrategy);
+        basePricingStrategy = new OccupancyPricingStrategy(basePricingStrategy);
+        basePricingStrategy = new UrgencyPricingStrategy(basePricingStrategy);
+        basePricingStrategy =new HolidayPricingStrategy(basePricingStrategy);
+
+        return basePricingStrategy.calculatePrice(inventoryEntity);
     }
 
     //    Return the sum of price of this inventory list

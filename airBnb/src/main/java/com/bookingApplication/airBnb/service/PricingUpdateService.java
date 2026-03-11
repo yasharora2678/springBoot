@@ -17,11 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -35,11 +32,13 @@ public class PricingUpdateService {
 
     @Scheduled(cron = "0 0 * * * *")
     public void updatePrices() {
+        System.out.println("Scheduler running: " + LocalDateTime.now());
         int page = 0;
         int batchSize = 100;
 
         while(true) {
             Page<HotelEntity> hotelPage = hotelRepository.findAll(PageRequest.of(page, batchSize));
+            System.out.println("It is working fine" + hotelPage);
             if(hotelPage.isEmpty()) {
                 break;
             }
@@ -55,22 +54,29 @@ public class PricingUpdateService {
         LocalDate endDate = LocalDate.now().plusYears(1);
 
         List<InventoryEntity> inventoryList = inventoryRepository.findByHotelAndDateBetween(hotel, startDate, endDate);
-
+        System.out.println(inventoryList + "Before updation");
         updateInventoryPrices(inventoryList);
-
+        System.out.println(inventoryList + "After updation");
         updateHotelMinPrice(hotel, inventoryList, startDate, endDate);
     }
 
     private void updateHotelMinPrice(HotelEntity hotel, List<InventoryEntity> inventoryList, LocalDate startDate, LocalDate endDate) {
         // Compute minimum price per day for the hotel
-        Map<LocalDate, BigDecimal> dailyMinPrices = inventoryList.stream()
-                .collect(Collectors.groupingBy(
-                        InventoryEntity::getDate,
-                        Collectors.mapping(InventoryEntity::getPrice, Collectors.minBy(Comparator.naturalOrder()))
-                ))
-                .entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().orElse(BigDecimal.ZERO)));
+        Map<LocalDate, BigDecimal> dailyMinPrices = new HashMap<>();
 
+        inventoryList.forEach(inventory -> {
+            LocalDate date = inventory.getDate();
+            BigDecimal price = inventory.getPrice();
+            if (!dailyMinPrices.containsKey(date)) {
+                dailyMinPrices.put(date, price);
+            } else {
+                BigDecimal currentMin = dailyMinPrices.get(date);
+                if (price.compareTo(currentMin) < 0) {
+                    dailyMinPrices.put(date, price);
+                }
+            }
+        });
+        System.out.println(dailyMinPrices + "Daily MIN PRICES");
         // Prepare HotelPrice entities in bulk
         List<HotelMinPriceEntity> hotelPrices = new ArrayList<>();
         dailyMinPrices.forEach((date, price) -> {

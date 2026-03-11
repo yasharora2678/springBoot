@@ -27,7 +27,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -90,7 +89,7 @@ public class InventoryServiceImpl implements InventoryService {
 
         return inventoryRepository.findByRoomOrderByDate(room).stream()
                 .map((element) -> modelMapper.map(element, InventoryDTO.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
