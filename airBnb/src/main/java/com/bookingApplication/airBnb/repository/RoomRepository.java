@@ -2,7 +2,7 @@ package com.bookingApplication.airBnb.repository;
 
 import com.bookingApplication.airBnb.entity.RoomEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface RoomRepository extends JpaRepository<RoomEntity, Long> {
-
-}
+@Repository
+public interface RoomRepository extends JpaRepository<RoomEntity, Long> { }

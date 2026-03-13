@@ -5,6 +5,8 @@ import com.bookingApplication.airBnb.interfaces.LoginResponse;
 import com.bookingApplication.airBnb.dto.SignUpRequest;
 import com.bookingApplication.airBnb.interfaces.SignUpResponse;
 import com.bookingApplication.airBnb.security.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,16 +24,27 @@ import java.util.Arrays;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "Auth Management", description = "Manage User Authentication")
 public class AuthController {
     private final  AuthService authService;
 
     @PostMapping("/register")
+    @Operation(
+            summary = "Register new user",
+            description = "Creates a new user account",
+            security = {}   // disables global security
+    )
     public ResponseEntity<SignUpResponse> signUp(@RequestBody SignUpRequest body) {
         SignUpResponse responseDTO = authService.signUp(body);
         return ResponseEntity.ok(responseDTO);
     }
 
     @PostMapping("/login")
+    @Operation(
+            summary = "Login a user",
+            description = "Login for a user account",
+            security = {}   // disables global security
+    )
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request, HttpServletResponse httpServletResponse) {
         String[] tokens = authService.login(request);
 
@@ -43,6 +56,11 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
+    @Operation(
+            summary = "Refresh token for a user",
+            description = "Generate Refresh token for a user account",
+            security = {}   // disables global security
+    )
     public ResponseEntity<LoginResponse> refreshToken(HttpServletRequest httpServletRequest) {
         String refreshToken = Arrays.stream(httpServletRequest.getCookies())
                 .filter(cookie -> "refreshToken".equals(cookie.getName()))

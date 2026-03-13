@@ -90,11 +90,14 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional
-    public void deleteRoomById(Long roomId) {
+    public void deleteRoomById(Long hotelId, Long roomId) {
         log.info("Deleting the room with ID: {}", roomId);
         RoomEntity room = roomRepository
                 .findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found with ID: " + roomId));
+        if(!room.getHotel().getId().equals(hotelId)){
+            throw new UnAuthorisedException("Hotel with id {}" + hotelId + " does not have this room with id {} : " + roomId);
+        }
 
         UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!user.getId().equals(room.getHotel().getOwner().getId())) {

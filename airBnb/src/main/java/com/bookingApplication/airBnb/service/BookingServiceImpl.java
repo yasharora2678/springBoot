@@ -2,18 +2,14 @@ package com.bookingApplication.airBnb.service;
 
 import com.bookingApplication.airBnb.dto.BookingRequest;
 import com.bookingApplication.airBnb.dto.GuestDTO;
-import com.bookingApplication.airBnb.entity.BookingEntity;
-import com.bookingApplication.airBnb.entity.HotelEntity;
-import com.bookingApplication.airBnb.entity.InventoryEntity;
-import com.bookingApplication.airBnb.entity.RoomEntity;
+import com.bookingApplication.airBnb.entity.*;
 import com.bookingApplication.airBnb.enums.BookingStatus;
 import com.bookingApplication.airBnb.exceptions.ResourceNotFoundException;
+import com.bookingApplication.airBnb.exceptions.UnAuthorisedException;
 import com.bookingApplication.airBnb.interfaces.BookingResponse;
+import com.bookingApplication.airBnb.interfaces.BookingStatusResponse;
 import com.bookingApplication.airBnb.interfaces.HotelReportResponse;
-import com.bookingApplication.airBnb.repository.BookingRepository;
-import com.bookingApplication.airBnb.repository.HotelRepository;
-import com.bookingApplication.airBnb.repository.InventoryRepository;
-import com.bookingApplication.airBnb.repository.RoomRepository;
+import com.bookingApplication.airBnb.repository.*;
 import com.bookingApplication.airBnb.service.interfaces.BookingService;
 import com.bookingApplication.airBnb.strategy.PricingService;
 import com.bookingApplication.airBnb.utils.AppUtils;
@@ -21,12 +17,16 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +37,7 @@ public class BookingServiceImpl implements BookingService {
     private final InventoryRepository inventoryRepository;
     private final PricingService pricingService;
     private final BookingRepository bookingRepository;
+    private final GuestRepository guestRepository;
     private final ModelMapper modelMapper;
 
     @Override
@@ -47,7 +48,7 @@ public class BookingServiceImpl implements BookingService {
         HotelEntity hotel = hotelRepository.findById(bookingRequest.getHotelId()).
                 orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id: " + bookingRequest.getHotelId()));
         RoomEntity room = roomRepository.findById(bookingRequest.getRoomId()).
-                orElseThrow(() -> new ResourceNotFoundException("Room not found with id: " + bookingRequest.getHotelId()));
+                orElseThrow(() -> new ResourceNotFoundException("Room not found with id: " + bookingRequest.getRoomId()));
 
         List<InventoryEntity> inventoryList = inventoryRepository.findAndLockAvailableInventory(bookingRequest.getRoomId(),
                 bookingRequest.getHotelId(), bookingRequest.getCheckInDate(), bookingRequest.getCheckOutDate(), bookingRequest.getRoomsCount());
@@ -82,8 +83,37 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingResponse addGuests(Long bookingId, List<GuestDTO> guestDtoList) {
-        return null;
+        log.info("Adding guests for booking with id: {}", bookingId);
+        BookingEntity booking = bookingRepository.findById(bookingId).
+                orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+
+        UserEntity user = AppUtils.getCurrentUser();
+        if(!user.getId().equals(booking.getUser().getId())) {
+            throw new UnAuthorisedException("Booking does not belong to this user with id: "+user.getId());
+        }
+
+        if(!booking.getBookingStatus().equals(BookingStatus.RESERVED)) {
+            throw new IllegalStateException("Booking is not under reserved state, cannot add guests");
+        }
+
+        if(hasBookingExpired(booking)) {
+            throw new IllegalStateException("Booking has already expired");
+        }
+        Set<GuestEntity> guestEntitySet = guestDtoList.stream()
+                .map(element -> {
+                    GuestEntity guest = modelMapper.map(element, GuestEntity.class);
+                    guest.setUser(user);
+                    return guestRepository.save(guest);
+                })
+                .collect(Collectors.toSet());
+
+        booking.setBookingStatus(BookingStatus.GUESTS_ADDED);
+        booking.setGuests(guestEntitySet);
+        booking = bookingRepository.save(booking);
+
+        return modelMapper.map(booking, BookingResponse.class);
     }
 
     @Override
@@ -93,26 +123,86 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public void cancelBooking(Long bookingId) {
+        log.info("Cancelling booking for booking with id: {}", bookingId);
 
+        BookingEntity booking = bookingRepository.findById(bookingId).
+                orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+
+        UserEntity user = AppUtils.getCurrentUser();
+        if(!user.getId().equals(booking.getUser().getId())) {
+            throw new UnAuthorisedException("Booking does not belong to this user with id: "+user.getId());
+        }
+
+        if(booking.getBookingStatus().equals(BookingStatus.CONFIRMED)) {
+            throw new IllegalStateException("Only confirmed bookings can be cancelled");
+        }
+
+        booking.setBookingStatus(BookingStatus.CANCELLED);
+        booking = bookingRepository.save(booking);
+
+        inventoryRepository.findAndLockReservedInventory(booking.getRoom().getId(),booking.getHotel().getId(), booking.getCheckInDate(), booking.getCheckOutDate(), booking.getRoomsCount());
+        inventoryRepository.cancelBooking(booking.getRoom().getId(),booking.getHotel().getId(), booking.getCheckInDate(), booking.getCheckOutDate(), booking.getRoomsCount());
     }
 
     @Override
-    public BookingStatus getBookingStatus(Long bookingId) {
-        return null;
+    public BookingStatusResponse getBookingStatus(Long bookingId) {
+        log.info("Getting booking status for booking with id: {}", bookingId);
+
+        BookingEntity booking = bookingRepository.findById(bookingId).
+                orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+
+        UserEntity user = AppUtils.getCurrentUser();
+        if(!user.getId().equals(booking.getUser().getId())) {
+            throw new UnAuthorisedException("Booking does not belong to this user with id: "+user.getId());
+        }
+
+        BookingStatus status =  booking.getBookingStatus();
+        return modelMapper.map(status, BookingStatusResponse.class);
     }
 
     @Override
     public List<BookingResponse> getAllBookingsByHotelId(Long hotelId) {
-        return List.of();
+        log.info("Getting all bookings for hotel with id: {}", hotelId);
+
+        HotelEntity hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id: " + hotelId));
+
+        UserEntity user = AppUtils.getCurrentUser();
+        if(!user.getId().equals(hotel.getOwner().getId())) {
+            throw new AccessDeniedException("You are not the owner of hotel with id: "+hotelId);
+        }
+
+        List<BookingEntity> bookings = bookingRepository.findByHotel(hotel);
+        return bookings.stream()
+                .map((booking) -> modelMapper.map(booking, BookingResponse.class)).toList();
     }
 
     @Override
     public HotelReportResponse getHotelReport(Long hotelId, LocalDate startDate, LocalDate endDate) {
+        HotelEntity hotel = hotelRepository.findById(hotelId).orElseThrow(() -> new ResourceNotFoundException("Hotel not " +
+                "found with ID: "+hotelId));
+        UserEntity user = AppUtils.getCurrentUser();
+
+        log.info("Generating report for hotel with ID: {}", hotelId);
+
         return null;
     }
 
     @Override
-    public List<BookingResponse> getMyBookings() {
-        return List.of();
+    public List<BookingResponse> getMyBookings(Long hotelId) {
+        UserEntity user = AppUtils.getCurrentUser();
+        log.info("Getting all bookings for user with id: {} with hotel id: {}", user.getId(), hotelId);
+
+        HotelEntity hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id: " + hotelId));
+
+        List<BookingEntity> bookings = bookingRepository.findByHotelAndUser(hotel, user);
+        return bookings.stream()
+                .map((booking) -> modelMapper.map(booking, BookingResponse.class)).toList();
+    }
+
+    @Override
+    public Boolean hasBookingExpired(BookingEntity booking) {
+        return booking.getCreatedAt().plusMinutes(15).isBefore(LocalDateTime.now());
     }
 }
